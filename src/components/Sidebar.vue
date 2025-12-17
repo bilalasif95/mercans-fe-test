@@ -1,0 +1,516 @@
+<template>
+  <div>
+    <div v-if="isMobile && !isCollapsed" class="sidebar-backdrop" @click="toggleCollapse"></div>
+
+    <nav :class="['sidebar', { 'sidebar--collapsed': isCollapsed, 'sidebar--mobile-open': isMobile && !isCollapsed }]">
+      <div class="sidebar-header">
+        <div class="sidebar-header-left">
+          <div class="sidebar-logo-circle">HRB</div>
+          <div class="sidebar-header-text">
+            <span class="sidebar-header-title">Employee</span>
+            <span class="sidebar-header-subtitle">Self Service</span>
+          </div>
+        </div>
+
+        <button class="sidebar-collapse-btn" type="button" @click="toggleCollapse">
+          <img v-if="!isMobile && isCollapsed" src="../assets/icons/chevron-right.svg" />
+          <img v-if="!isMobile && !isCollapsed" src="../assets/icons/chevron-left.svg" />
+        </button>
+      </div>
+
+      <div class="sidebar-body">
+        <section class="company-card">
+          <div class="company-logo-wrapper">
+            <img src="../assets/logo.svg" />
+          </div>
+
+          <div class="company-text">
+            <div class="company-name">Boring Company</div>
+            <div class="company-subtitle">Mercans USA Ltd.</div>
+          </div>
+
+          <div class="company-actions">
+            <button type="button" class="company-icon">
+              <img src="../assets/icons/launchpad.svg" />
+            </button>
+            <button type="button" class="company-icon">
+              <img src="../assets/icons/news.svg" />
+              <span class="badge-dot"></span>
+            </button>
+            <button type="button" class="company-icon">
+              <img src="../assets/icons/notification.svg" />
+              <span class="badge-dot"></span>
+            </button>
+          </div>
+        </section>
+
+        <div class="company-divider"></div>
+
+        <ul class="sidebar-menu">
+          <li v-for="item in sortedLinks" :key="item.path" class="sidebar-menu-item">
+            <RouterLink :to="`/${item.path}`" class="sidebar-link" :class="{ 'sidebar-link--active': isActive(item) }"
+              @click="onNavClick">
+              <span class="sidebar-icon-wrap">
+                <img v-if="getIconSrc(item.icon)" :src="getIconSrc(item.icon)" :alt="item.title" />
+                <span v-else class="sidebar-icon-fallback"></span>
+              </span>
+              <span class="sidebar-link-text">{{ formatTitle(item.title) }}</span>
+            </RouterLink>
+          </li>
+        </ul>
+      </div>
+
+      <footer class="sidebar-footer">
+        Mercans © 2025
+      </footer>
+    </nav>
+  </div>
+</template>
+
+<script setup>
+import { computed, ref, onMounted, onBeforeUnmount } from "vue";
+import { useRoute } from "vue-router";
+import menuLinks from "../data/menuLinks.json";
+
+const props = defineProps({
+  modelValue: {
+    type: Boolean,
+    default: false,
+  },
+});
+
+const emit = defineEmits(["update:modelValue"]);
+
+const route = useRoute();
+const internalCollapsed = ref(props.modelValue);
+const isMobile = ref(false);
+
+const isCollapsed = computed({
+  get: () => internalCollapsed.value,
+  set: (val) => {
+    internalCollapsed.value = val;
+    emit("update:modelValue", val);
+  },
+});
+
+const handleResize = () => {
+  const mobile = window.innerWidth <= 768;
+  isMobile.value = mobile;
+  if (mobile) {
+    internalCollapsed.value = true;
+    emit("update:modelValue", true);
+  }
+};
+
+onMounted(() => {
+  handleResize();
+  window.addEventListener("resize", handleResize);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", handleResize);
+});
+
+const toggleCollapse = () => {
+  isCollapsed.value = !isCollapsed.value;
+};
+
+const onNavClick = () => {
+  if (isMobile.value && !isCollapsed.value) {
+    isCollapsed.value = true;
+  }
+};
+
+const sortedLinks = computed(() =>
+  menuLinks
+    .filter((l) => l.enabled)
+    .sort((a, b) => a.ordinal - b.ordinal)
+);
+
+const isActive = (item) => route.path === `/${item.path}`;
+
+const formatTitle = (key) =>
+  key
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+
+const getIconSrc = (iconKey) => {
+  if (!iconKey) return null;
+  try {
+    return new URL(`../assets/icons/${iconKey}.svg`, import.meta.url).href;
+  } catch {
+    return null;
+  }
+};
+</script>
+
+<style scoped>
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  z-index: 59;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 260px;
+  background: #ffffff;
+  border-right: 1px solid #d6e0f0;
+  transition: max-width 0.2s ease;
+}
+
+.sidebar--collapsed {
+  max-width: 84px;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 0 18px 16px;
+  background: #001738;
+  color: #ffffff;
+}
+
+.sidebar-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebar-logo-circle {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  background: #ff7d56;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.sidebar-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebar-header-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sidebar-header-subtitle {
+  font-size: 13px;
+}
+
+.sidebar-collapse-btn {
+  position: relative;
+  width: 36px;
+  height: 60px;
+  border-radius: 8px;
+  border: 1px solid rgba(235, 240, 255, 0.4);
+  background: transparent;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.sidebar-collapse-btn img {
+  width: 18px;
+  height: 18px;
+}
+
+.sidebar-body {
+  flex: 1;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+}
+
+.company-card {
+  padding: 24px 16px 18px;
+  text-align: center;
+}
+
+.company-logo-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.company-text {
+  margin-bottom: 20px;
+}
+
+.company-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #536d82;
+  margin-bottom: 4px;
+}
+
+.company-subtitle {
+  font-size: 15px;
+  color: #001738;
+}
+
+.company-actions {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+}
+
+.company-icon {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border: unset;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.badge-dot {
+  position: absolute;
+  right: 4px;
+  top: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+  background: #ffb020;
+  border: 2px solid #ffffff;
+}
+
+.company-divider {
+  margin: 18px 0 10px;
+  border-top: 1px solid #dde6f5;
+}
+
+.sidebar-menu {
+  list-style: none;
+  padding: 0 16px 0;
+  margin: 0;
+  flex: 1;
+}
+
+.sidebar-menu-item {
+  margin-bottom: 10px;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: #143a6a;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  transition: background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease,
+    transform 0.1s ease;
+  border: 1px solid transparent;
+}
+
+.sidebar-link:hover {
+  background: #f5f7fb;
+}
+
+.sidebar-link--active {
+  background: #ffe3d7;
+  border-color: #001738;
+  box-shadow: 0 0 0 1px rgba(255, 200, 172, 0.5);
+}
+
+.sidebar-icon-wrap {
+  width: 22px;
+  display: flex;
+  justify-content: center;
+}
+
+.sidebar-icon-wrap img {
+  width: 22px;
+  height: 22px;
+}
+
+.sidebar-icon-fallback {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.sidebar-link-text {
+  white-space: nowrap;
+}
+
+.sidebar-footer {
+  padding: 14px 12px 18px;
+  text-align: center;
+  font-size: 13px;
+  color: #7a8ba3;
+  background: #f2f5fb;
+}
+
+.sidebar--collapsed .sidebar-header-text {
+  display: none;
+}
+
+.sidebar--collapsed .sidebar-header {
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 16px 0 12px;
+}
+
+.sidebar--collapsed .sidebar-collapse-btn {
+  position: static;
+  margin-top: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  margin-right: 0;
+}
+
+.sidebar--collapsed .company-card,
+.sidebar--collapsed .company-divider {
+  display: none;
+}
+
+.sidebar--collapsed .sidebar-menu {
+  padding-inline: 8px;
+}
+
+.sidebar--collapsed .sidebar-link {
+  justify-content: center;
+  padding-inline: 10px;
+}
+
+.sidebar--collapsed .sidebar-link-text {
+  display: none;
+}
+
+.sidebar--collapsed .sidebar-footer {
+  font-size: 11px;
+  padding-inline: 4px;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    max-width: 240px;
+  }
+
+  .sidebar--collapsed {
+    max-width: 80px;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    max-width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #d6e0f0;
+  }
+
+  .sidebar--mobile-open {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    overflow: auto;
+    z-index: 60;
+  }
+
+  .sidebar-header {
+    padding-right: 16px;
+  }
+
+  .sidebar-collapse-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid rgba(235, 240, 255, 0.6);
+    margin-right: 0;
+  }
+
+  .sidebar-collapse-btn img {
+    display: none;
+  }
+
+  .sidebar-collapse-btn::before,
+  .sidebar-collapse-btn::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 18px;
+    height: 2px;
+    border-radius: 2px;
+    background: #ffffff;
+    transform: translate(-50%, -50%);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+  }
+
+  .sidebar-collapse-btn::after {
+    opacity: 0;
+  }
+
+  .sidebar.sidebar--collapsed .sidebar-collapse-btn::before {
+    box-shadow: 0 -5px 0 #ffffff, 0 5px 0 #ffffff;
+  }
+
+  .sidebar.sidebar--collapsed .sidebar-collapse-btn::after {
+    opacity: 0;
+  }
+
+  .sidebar:not(.sidebar--collapsed) .sidebar-collapse-btn::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+    box-shadow: none;
+  }
+
+  .sidebar:not(.sidebar--collapsed) .sidebar-collapse-btn::after {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+
+  .sidebar--collapsed {
+    max-width: 100%;
+  }
+
+  .sidebar--collapsed .sidebar-body,
+  .sidebar--collapsed .sidebar-footer {
+    display: none;
+  }
+
+  .sidebar--collapsed .sidebar-header-text {
+    display: flex;
+  }
+
+  .sidebar--collapsed .sidebar-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 16px 18px;
+  }
+
+  .sidebar--collapsed .sidebar-collapse-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    margin-top: 0;
+    position: relative;
+  }
+}
+</style>
