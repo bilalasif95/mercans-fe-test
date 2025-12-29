@@ -150,11 +150,40 @@
     </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref } from "vue";
 import payslipsRaw from "../data/payslips.json";
 
-const mappedPayslips = payslipsRaw.map((record) => {
+interface PayslipEntry {
+    key: string;
+    amount: number;
+    currency: string;
+}
+
+interface PayslipRaw {
+    fileAttachment: {
+        accessToken: string;
+        file: {
+            label: string;
+        };
+    };
+    payrollDate: string;
+    payslipEntries: PayslipEntry[];
+}
+
+interface MappedPayslip {
+    id: string;
+    payrollDate: Date;
+    monthLabel: string;
+    year: number;
+    payslipLabel: string;
+    grossAmount: number | null;
+    netAmount: number | null;
+    currency: string;
+    rawFileLabel: string;
+}
+
+const mappedPayslips: MappedPayslip[] = (payslipsRaw as PayslipRaw[]).map((record) => {
     const date = new Date(record.payrollDate);
     const monthLabel = date.toLocaleDateString(undefined, {
         month: "long",
@@ -162,10 +191,9 @@ const mappedPayslips = payslipsRaw.map((record) => {
     });
 
     const gross = record.payslipEntries.find((e) => e.key === "GROSS");
-    const net = record.payslipEntries?.find?.((e) => e.key === "NET PAY") ?? record.payslipEntries.find((e) => e.key === "NET PAY");
+    const net = record.payslipEntries.find((e) => e.key === "NET PAY");
 
-    const fileLabel =
-        record.fileAttachment.file?.label ?? record.fileAttachment.file.label;
+    const fileLabel = record.fileAttachment.file.label;
 
     return {
         id: record.fileAttachment.accessToken,
@@ -182,7 +210,7 @@ const mappedPayslips = payslipsRaw.map((record) => {
 
 const sortedPayslips = computed(() =>
     [...mappedPayslips].sort(
-        (a, b) => b.payrollDate - a.payrollDate
+        (a, b) => b.payrollDate.getTime() - a.payrollDate.getTime()
     )
 );
 
@@ -192,7 +220,7 @@ const currencies = computed(() => {
 });
 const selectedCurrency = ref(currencies.value[0] || "");
 
-const getCountForCurrency = (currency) =>
+const getCountForCurrency = (currency: string) =>
     mappedPayslips.filter((p) => p.currency === currency).length;
 
 const filteredPayslips = computed(() =>
@@ -206,7 +234,7 @@ const activeYear = computed(() => {
     return filteredPayslips.value[0].year;
 });
 
-const formatMoney = (value, currency) => {
+const formatMoney = (value: number | null | undefined, currency?: string) => {
     if (value == null) return "-";
     const num = Number(value);
     const numberPart = num.toLocaleString("en-US", {
@@ -216,12 +244,12 @@ const formatMoney = (value, currency) => {
     return `${numberPart} ${currency || "USD"}`;
 };
 
-const expandedRowId = ref(null);
-const toggleRow = (id) => {
+const expandedRowId = ref<string | null>(null);
+const toggleRow = (id: string) => {
     expandedRowId.value = expandedRowId.value === id ? null : id;
 };
 
-const getPdfUrl = (accessToken) => `/payslips/${accessToken}.pdf`;
+const getPdfUrl = (accessToken: string) => `/payslips/${accessToken}.pdf`;
 
 const isSalaryModalOpen = ref(false);
 const showEvolutionTooltip = ref(false);

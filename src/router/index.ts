@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
 
 import DashboardView from "../views/DashboardView.vue";
 import MyInformationView from "../views/MyInformationView.vue";
@@ -10,7 +10,7 @@ import OrgChartView from "../views/OrgChartView.vue";
 import MyTeamView from "../views/MyTeamView.vue";
 import DocumentsView from "../views/DocumentsView.vue";
 
-const routes = [
+const routes: RouteRecordRaw[] = [
     { path: "/", redirect: "/dashboard" },
     { path: "/dashboard", name: "dashboard", component: DashboardView },
     { path: "/my-information", name: "my_information", component: MyInformationView },

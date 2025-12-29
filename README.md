@@ -72,12 +72,12 @@ mercans-fe-test/
 │  ├─ views/
 │  │  └─ MyPayslipsView.vue
 │  ├─ router/
-│  │  └─ index.js
+│  │  └─ index.ts
 │  ├─ App.vue
-│  └─ main.js
+│  └─ main.ts
 │
 ├─ package.json
-└─ vite.config.js
+└─ vite.config.ts
 ```
 
 ---

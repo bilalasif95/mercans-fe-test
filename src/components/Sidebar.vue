@@ -67,10 +67,18 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, ref, onMounted, onBeforeUnmount } from "vue";
 import { useRoute } from "vue-router";
 import menuLinks from "../data/menuLinks.json";
+
+interface MenuLink {
+  ordinal: number;
+  icon: string;
+  title: string;
+  path: string;
+  enabled: boolean;
+}
 
 const props = defineProps({
   modelValue: {
@@ -122,25 +130,25 @@ const onNavClick = () => {
 };
 
 const sortedLinks = computed(() =>
-  menuLinks
+  (menuLinks as MenuLink[])
     .filter((l) => l.enabled)
     .sort((a, b) => a.ordinal - b.ordinal)
 );
 
-const isActive = (item) => route.path === `/${item.path}`;
+const isActive = (item: MenuLink) => route.path === `/${item.path}`;
 
-const formatTitle = (key) =>
+const formatTitle = (key: string) =>
   key
     .split("_")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
 
-const getIconSrc = (iconKey) => {
-  if (!iconKey) return null;
+const getIconSrc = (iconKey: string): string | undefined => {
+  if (!iconKey) return undefined;
   try {
     return new URL(`../assets/icons/${iconKey}.svg`, import.meta.url).href;
   } catch {
-    return null;
+    return undefined;
   }
 };
 </script>
