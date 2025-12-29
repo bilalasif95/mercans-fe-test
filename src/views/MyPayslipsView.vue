@@ -113,8 +113,7 @@
                                                 </div>
 
                                                 <div class="payslip-preview-body">
-                                                    <iframe class="payslip-pdf-frame" :src="getPdfUrl(p.id)"
-                                                        title="Payslip PDF"></iframe>
+                                                    <PdfViewer :src="getPdfUrl(p.id)" />
                                                 </div>
                                             </div>
                                         </td>
@@ -166,6 +165,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, watch } from "vue";
 import { usePayslips } from "../composables/usePayslips";
+import PdfViewer from "../components/PdfViewer.vue";
 
 const { mappedPayslips, isLoading, error, fetchPayslips } = usePayslips();
 
@@ -573,15 +573,9 @@ const firstEmployeeLine = computed(() => {
 }
 
 .payslip-preview-body {
-    padding: 12px 16px 14px;
+    padding: 0;
     background: var(--footer-bg);
-}
-
-.payslip-pdf-frame {
-    width: 100%;
-    height: 520px;
-    border: none;
-    border-radius: 6px;
+    height: 600px;
 }
 
 .no-data {
