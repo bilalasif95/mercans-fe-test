@@ -14,107 +14,120 @@
             </header>
 
             <div class="payslips-card-body">
-                <div class="payslips-top-row">
-                    <div class="payslips-breadcrumb">
-                        <span class="crumb-main">Payslips</span>
-                        <span class="crumb-separator">›</span>
-                        <span class="crumb-year">{{ activeYear }}</span>
-                    </div>
+                <div v-if="isLoading" class="state-indicator">
+                    <div class="loader"></div>
+                    <span>Loading payslips...</span>
+                </div>
 
-                    <div class="salary-evolution-wrapper">
-                        <button class="salary-evolution-btn" type="button" @click="openSalaryModal"
-                            @mouseenter="showEvolutionTooltip = true" @mouseleave="showEvolutionTooltip = false">
-                            <img src="../assets/icons/salary-evolution.svg" alt="Salary evolution" />
-                        </button>
-                        <div v-if="showEvolutionTooltip" class="evolution-tooltip">
-                            View salary evolution
+                <div v-else-if="error" class="state-indicator error">
+                    <span class="error-icon">⚠️</span>
+                    <span>{{ error }}</span>
+                    <button @click="fetchPayslips" class="retry-btn">Retry</button>
+                </div>
+
+                <template v-else>
+                    <div class="payslips-top-row">
+                        <div class="payslips-breadcrumb">
+                            <span class="crumb-main">Payslips</span>
+                            <span class="crumb-separator">›</span>
+                            <span class="crumb-year">{{ activeYear }}</span>
+                        </div>
+
+                        <div class="salary-evolution-wrapper">
+                            <button class="salary-evolution-btn" type="button" @click="openSalaryModal"
+                                @mouseenter="showEvolutionTooltip = true" @mouseleave="showEvolutionTooltip = false">
+                                <img src="../assets/icons/salary-evolution.svg" alt="Salary evolution" />
+                            </button>
+                            <div v-if="showEvolutionTooltip" class="evolution-tooltip">
+                                View salary evolution
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="table-wrapper">
-                    <table class="payslips-table">
-                        <thead>
-                            <tr>
-                                <th class="col-toggle"></th>
-                                <th class="col-index">#</th>
-                                <th class="col-period">Period</th>
-                                <th class="col-name">Payslips</th>
-                                <th class="col-gross">Gross salary</th>
-                                <th class="col-net">Net pay</th>
-                                <th class="col-actions"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template v-for="(p, index) in filteredPayslips" :key="p.id">
-                                <tr class="row-main" @click="toggleRow(p.id)">
-                                    <td class="col-toggle">
-                                        <button class="toggle-btn" type="button" @click.stop="toggleRow(p.id)"
-                                            :aria-expanded="expandedRowId === p.id">
-                                            <img v-if="expandedRowId === p.id" src="../assets/icons/chevron-up.svg" />
-                                            <img v-else src="../assets/icons/chevron-down.svg" />
-                                        </button>
-                                    </td>
-
-                                    <td class="col-index">
-                                        {{ filteredPayslips.length - index }}
-                                    </td>
-
-                                    <td class="col-period">
-                                        <span class="month-link">
-                                            {{ p.monthLabel }}
-                                        </span>
-                                    </td>
-
-                                    <td class="col-name">
-                                        <span class="payslip-name" :title="p.payslipLabel">
-                                            {{ p.payslipLabel }}
-                                        </span>
-                                    </td>
-
-                                    <td class="col-gross">
-                                        <span class="amount-pill amount-pill--gross">
-                                            {{ formatMoney(p.grossAmount, p.currency) }}
-                                        </span>
-                                    </td>
-
-                                    <td class="col-net">
-                                        <span class="amount-pill amount-pill--net">
-                                            {{ formatMoney(p.netAmount, p.currency) }}
-                                        </span>
-                                    </td>
-
-                                    <td class="col-actions">
-                                        <button class="more-btn" type="button" @click.stop>⋮</button>
-                                    </td>
+                    <div class="table-wrapper">
+                        <table class="payslips-table">
+                            <thead>
+                                <tr>
+                                    <th class="col-toggle"></th>
+                                    <th class="col-index">#</th>
+                                    <th class="col-period">Period</th>
+                                    <th class="col-name">Payslips</th>
+                                    <th class="col-gross">Gross salary</th>
+                                    <th class="col-net">Net pay</th>
+                                    <th class="col-actions"></th>
                                 </tr>
+                            </thead>
+                            <tbody>
+                                <template v-for="(p, index) in filteredPayslips" :key="p.id">
+                                    <tr class="row-main" @click="toggleRow(p.id)">
+                                        <td class="col-toggle">
+                                            <button class="toggle-btn" type="button" @click.stop="toggleRow(p.id)"
+                                                :aria-expanded="expandedRowId === p.id">
+                                                <img v-if="expandedRowId === p.id" src="../assets/icons/chevron-up.svg" />
+                                                <img v-else src="../assets/icons/chevron-down.svg" />
+                                            </button>
+                                        </td>
 
-                                <tr v-if="expandedRowId === p.id" class="row-details">
-                                    <td class="row-details-left-border"></td>
-                                    <td colspan="6">
-                                        <div class="payslip-preview">
-                                            <div class="payslip-preview-header">
-                                                <div class="payslip-preview-title">
-                                                    <span class="preview-label">Payslip</span>
-                                                    <span class="preview-period">{{ p.monthLabel }}</span>
+                                        <td class="col-index">
+                                            {{ filteredPayslips.length - index }}
+                                        </td>
+
+                                        <td class="col-period">
+                                            <span class="month-link">
+                                                {{ p.monthLabel }}
+                                            </span>
+                                        </td>
+
+                                        <td class="col-name">
+                                            <span class="payslip-name" :title="p.payslipLabel">
+                                                {{ p.payslipLabel }}
+                                            </span>
+                                        </td>
+
+                                        <td class="col-gross">
+                                            <span class="amount-pill amount-pill--gross">
+                                                {{ formatMoney(p.grossAmount, p.currency) }}
+                                            </span>
+                                        </td>
+
+                                        <td class="col-net">
+                                            <span class="amount-pill amount-pill--net">
+                                                {{ formatMoney(p.netAmount, p.currency) }}
+                                            </span>
+                                        </td>
+
+                                        <td class="col-actions">
+                                            <button class="more-btn" type="button" @click.stop>⋮</button>
+                                        </td>
+                                    </tr>
+
+                                    <tr v-if="expandedRowId === p.id" class="row-details">
+                                        <td class="row-details-left-border"></td>
+                                        <td colspan="6">
+                                            <div class="payslip-preview">
+                                                <div class="payslip-preview-header">
+                                                    <div class="payslip-preview-title">
+                                                        <span class="preview-label">Payslip</span>
+                                                        <span class="preview-period">{{ p.monthLabel }}</span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="payslip-preview-body">
+                                                    <iframe class="payslip-pdf-frame" :src="getPdfUrl(p.id)"
+                                                        title="Payslip PDF"></iframe>
                                                 </div>
                                             </div>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
 
-                                            <div class="payslip-preview-body">
-                                                <iframe class="payslip-pdf-frame" :src="getPdfUrl(p.id)"
-                                                    title="Payslip PDF"></iframe>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-
-                    <div v-if="!filteredPayslips.length" class="no-data">
-                        No payslips for selected currency.
+                        <div v-if="!filteredPayslips.length" class="no-data">
+                            No payslips for selected currency.
+                        </div>
                     </div>
-                </div>
+                </template>
             </div>
         </section>
 
@@ -151,77 +164,36 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import payslipsRaw from "../data/payslips.json";
+import { computed, ref, onMounted, watch } from "vue";
+import { usePayslips } from "../composables/usePayslips";
 
-interface PayslipEntry {
-    key: string;
-    amount: number;
-    currency: string;
-}
+const { mappedPayslips, isLoading, error, fetchPayslips } = usePayslips();
 
-interface PayslipRaw {
-    fileAttachment: {
-        accessToken: string;
-        file: {
-            label: string;
-        };
-    };
-    payrollDate: string;
-    payslipEntries: PayslipEntry[];
-}
+const currencies = computed(() => {
+    const set = new Set(mappedPayslips.value.map((p) => p.currency));
+    return Array.from(set);
+});
 
-interface MappedPayslip {
-    id: string;
-    payrollDate: Date;
-    monthLabel: string;
-    year: number;
-    payslipLabel: string;
-    grossAmount: number | null;
-    netAmount: number | null;
-    currency: string;
-    rawFileLabel: string;
-}
+const selectedCurrency = ref("");
 
-const mappedPayslips: MappedPayslip[] = (payslipsRaw as PayslipRaw[]).map((record) => {
-    const date = new Date(record.payrollDate);
-    const monthLabel = date.toLocaleDateString(undefined, {
-        month: "long",
-        year: "numeric",
-    });
+watch(currencies, (newCurrencies) => {
+    if (newCurrencies.length > 0 && !selectedCurrency.value) {
+        selectedCurrency.value = newCurrencies[0];
+    }
+}, { immediate: true });
 
-    const gross = record.payslipEntries.find((e) => e.key === "GROSS");
-    const net = record.payslipEntries.find((e) => e.key === "NET PAY");
-
-    const fileLabel = record.fileAttachment.file.label;
-
-    return {
-        id: record.fileAttachment.accessToken,
-        payrollDate: date,
-        monthLabel,
-        year: date.getFullYear(),
-        payslipLabel: fileLabel,
-        grossAmount: gross ? gross.amount : null,
-        netAmount: net ? net.amount : null,
-        currency: gross?.currency || net?.currency || "USD",
-        rawFileLabel: fileLabel,
-    };
+onMounted(async () => {
+    await fetchPayslips();
 });
 
 const sortedPayslips = computed(() =>
-    [...mappedPayslips].sort(
+    [...mappedPayslips.value].sort(
         (a, b) => b.payrollDate.getTime() - a.payrollDate.getTime()
     )
 );
 
-const currencies = computed(() => {
-    const set = new Set(mappedPayslips.map((p) => p.currency));
-    return Array.from(set);
-});
-const selectedCurrency = ref(currencies.value[0] || "");
-
 const getCountForCurrency = (currency: string) =>
-    mappedPayslips.filter((p) => p.currency === currency).length;
+    mappedPayslips.value.filter((p) => p.currency === currency).length;
 
 const filteredPayslips = computed(() =>
     sortedPayslips.value.filter(
@@ -263,8 +235,8 @@ const closeSalaryModal = () => {
 };
 
 const firstEmployeeLine = computed(() => {
-    if (!mappedPayslips.length) return "";
-    const label = mappedPayslips[0].rawFileLabel || "";
+    if (!mappedPayslips.value.length) return "";
+    const label = mappedPayslips.value[0].rawFileLabel || "";
     const parts = label.split(" - ");
     if (parts.length >= 3) {
         return `${parts[1]} – ${parts[2]}`;
@@ -282,12 +254,50 @@ const firstEmployeeLine = computed(() => {
     overflow-x: hidden;
 }
 
+.state-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 12px;
+    color: var(--text-muted);
+}
+
+.state-indicator.error {
+    color: var(--error-red);
+}
+
+.retry-btn {
+    margin-top: 8px;
+    padding: 8px 16px;
+    background: var(--text-primary-dark);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.loader {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--loader-track);
+    border-top: 3px solid var(--brand-orange);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 .payslips-shell {
-    background: #ffffff;
+    background: var(--card-bg);
     border-radius: 18px;
-    box-shadow: 0 18px 40px rgba(7, 27, 58, 0.12);
+    box-shadow: var(--shadow-shell);
     overflow: hidden;
-    border: 1px solid #FFDFD2;
+    border: 1px solid var(--border-orange-soft);
     width: 100%;
     max-width: 100%;
 }
@@ -296,8 +306,8 @@ const firstEmployeeLine = computed(() => {
     display: flex;
     align-items: stretch;
     padding: 0;
-    background: #001738;
-    color: #ffffff;
+    background: var(--header-bg-dark);
+    color: var(--white);
 }
 
 .currency-tabs {
@@ -313,15 +323,15 @@ const firstEmployeeLine = computed(() => {
     font-size: 13px;
     font-weight: 500;
     background: transparent;
-    color: #d0dcff;
+    color: var(--text-tab-inactive);
     display: flex;
     align-items: center;
     border-radius: 0;
 }
 
 .currency-tab--active {
-    background: #FF5F1F;
-    color: #ffffff;
+    background: var(--brand-orange-vivid);
+    color: var(--white);
 }
 
 .payslips-card-body {
@@ -337,7 +347,7 @@ const firstEmployeeLine = computed(() => {
 
 .payslips-breadcrumb {
     font-size: 13px;
-    color: #6b7280;
+    color: var(--text-muted);
 }
 
 .crumb-main {
@@ -350,7 +360,7 @@ const firstEmployeeLine = computed(() => {
 
 .crumb-year {
     font-weight: 600;
-    color: #021b3f;
+    color: var(--text-primary-dark);
 }
 
 .salary-evolution-wrapper {
@@ -362,14 +372,14 @@ const firstEmployeeLine = computed(() => {
 .salary-evolution-btn {
     width: 40px;
     height: 40px;
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     border: none;
-    background: #021b3f;
-    color: #ffffff;
+    background: var(--text-primary-dark);
+    color: var(--white);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 6px 14px rgba(7, 27, 58, 0.25);
+    box-shadow: var(--shadow-btn);
     cursor: pointer;
     transition: transform 0.16s ease, box-shadow 0.16s ease;
 }
@@ -382,7 +392,7 @@ const firstEmployeeLine = computed(() => {
 
 .salary-evolution-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 10px 22px rgba(7, 27, 58, 0.28);
+    box-shadow: var(--shadow-btn-hover);
 }
 
 .salary-evolution-btn:hover img {
@@ -393,13 +403,13 @@ const firstEmployeeLine = computed(() => {
     position: absolute;
     top: 50px;
     right: 0;
-    background: #111827;
-    color: #ffffff;
+    background: var(--tooltip-bg);
+    color: var(--white);
     font-size: 11px;
     padding: 6px 10px;
     border-radius: 6px;
     white-space: nowrap;
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.35);
+    box-shadow: var(--shadow-modal);
     z-index: 10;
 }
 
@@ -418,15 +428,15 @@ const firstEmployeeLine = computed(() => {
 }
 
 .payslips-table thead tr {
-    background: #ffffff;
-    color: #1A3E6D;
+    background: var(--white);
+    color: var(--link-sidebar);
 }
 
 .payslips-table th,
 .payslips-table td {
     padding: 10px 14px;
     text-align: left;
-    border-bottom: 1px solid #e1e6f3;
+    border-bottom: 1px solid var(--border-table);
     vertical-align: middle;
 }
 
@@ -435,7 +445,7 @@ const firstEmployeeLine = computed(() => {
 }
 
 .payslips-table td.col-toggle {
-    background: #f5f7fb;
+    background: var(--app-bg);
 }
 
 .col-index {
@@ -458,12 +468,12 @@ const firstEmployeeLine = computed(() => {
 }
 
 .row-main {
-    background: #ffffff;
+    background: var(--white);
     cursor: pointer;
 }
 
 .row-main:hover {
-    background: #f5f7fb;
+    background: var(--app-bg);
 }
 
 .toggle-btn {
@@ -479,13 +489,13 @@ const firstEmployeeLine = computed(() => {
 }
 
 .toggle-btn:focus-visible {
-    outline: 2px solid #2563eb;
+    outline: 2px solid var(--brand-blue);
     outline-offset: 2px;
 }
 
 .month-link {
     font-size: 13px;
-    color: #CC4C19;
+    color: var(--link-accent);
 }
 
 .payslip-name {
@@ -505,13 +515,13 @@ const firstEmployeeLine = computed(() => {
 }
 
 .amount-pill--gross {
-    background: #E3E6EC;
-    color: #001738;
+    background: var(--pill-gross-bg);
+    color: var(--pill-gross-text);
 }
 
 .amount-pill--net {
-    background: #CFE7D4;
-    color: #095019;
+    background: var(--pill-net-bg);
+    color: var(--pill-net-text);
 }
 
 .more-btn {
@@ -522,21 +532,21 @@ const firstEmployeeLine = computed(() => {
 }
 
 .row-details td {
-    background: #ffffff;
+    background: var(--white);
     border-bottom: none;
     padding-top: 0;
 }
 
 .row-details-left-border {
-    border-right: 1px solid #e1e6f3;
-    background: #f5f7fb;
+    border-right: 1px solid var(--border-table);
+    background: var(--app-bg);
 }
 
 .payslip-preview {
     margin: 8px 0 14px;
     border-radius: 10px;
-    border: 1px solid #e1e6f3;
-    background: #ffffff;
+    border: 1px solid var(--border-table);
+    background: var(--white);
     overflow: hidden;
 }
 
@@ -545,12 +555,12 @@ const firstEmployeeLine = computed(() => {
     align-items: center;
     justify-content: space-between;
     padding: 10px 16px;
-    border-bottom: 1px solid #e1e6f3;
+    border-bottom: 1px solid var(--border-table);
 }
 
 .payslip-preview-title {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--text-muted);
 }
 
 .preview-label {
@@ -559,12 +569,12 @@ const firstEmployeeLine = computed(() => {
 }
 
 .preview-period {
-    color: #021b3f;
+    color: var(--text-primary-dark);
 }
 
 .payslip-preview-body {
     padding: 12px 16px 14px;
-    background: #f8fafc;
+    background: var(--footer-bg);
 }
 
 .payslip-pdf-frame {
@@ -577,13 +587,13 @@ const firstEmployeeLine = computed(() => {
 .no-data {
     padding: 12px;
     font-size: 13px;
-    color: #6b7280;
+    color: var(--text-muted);
 }
 
 .evolution-modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.35);
+    background: var(--overlay-backdrop);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -595,9 +605,9 @@ const firstEmployeeLine = computed(() => {
     height: calc(100% - 48px);
     max-width: 1440px;
     max-height: 860px;
-    background: #ffffff;
+    background: var(--white);
     border-radius: 20px;
-    box-shadow: 0 24px 60px rgba(7, 27, 58, 0.35);
+    box-shadow: var(--shadow-modal);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -608,16 +618,16 @@ const firstEmployeeLine = computed(() => {
     grid-template-columns: 220px 1fr 60px;
     align-items: center;
     padding: 18px 32px 14px;
-    border-bottom: 1px solid #e1e6f3;
-    background: #f9fafb;
+    border-bottom: 1px solid var(--border-table);
+    background: var(--app-bg);
     column-gap: 24px;
 }
 
 .evolution-company {
     font-size: 13px;
     font-weight: 600;
-    color: #021b3f;
-    border-right: 1px solid #d1d9e6;
+    color: var(--text-primary-dark);
+    border-right: 1px solid var(--border-light);
     padding-right: 24px;
 }
 
@@ -630,27 +640,27 @@ const firstEmployeeLine = computed(() => {
 .evolution-title {
     font-size: 18px;
     font-weight: 600;
-    color: #021b3f;
+    color: var(--text-primary-dark);
 }
 
 .evolution-employee {
     font-size: 12px;
-    color: #6b7280;
+    color: var(--text-muted);
 }
 
 .evolution-close {
     width: 40px;
     height: 40px;
-    border-radius: 999px;
+    border-radius: var(--radius-full);
     border: none;
-    background: #021b3f;
-    color: #ffffff;
+    background: var(--text-primary-dark);
+    color: var(--white);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     justify-self: end;
-    box-shadow: 0 8px 20px rgba(7, 27, 58, 0.35);
+    box-shadow: var(--shadow-btn);
 }
 
 .evolution-close-icon {
@@ -660,21 +670,21 @@ const firstEmployeeLine = computed(() => {
 
 .evolution-modal-body {
     padding: 24px 32px 28px;
-    background: #ffffff;
+    background: var(--white);
     flex: 1;
     overflow: auto;
 }
 
 .evolution-placeholder {
     border-radius: 18px;
-    border: 1px dashed #d7e0f0;
+    border: 1px dashed var(--border-light);
     min-height: calc(100% - 8px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    color: #6b7280;
+    color: var(--text-muted);
     padding: 40px 24px;
 }
 

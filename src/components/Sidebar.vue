@@ -70,15 +70,8 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onBeforeUnmount } from "vue";
 import { useRoute } from "vue-router";
-import menuLinks from "../data/menuLinks.json";
-
-interface MenuLink {
-  ordinal: number;
-  icon: string;
-  title: string;
-  path: string;
-  enabled: boolean;
-}
+import { useMenu } from "../composables/useMenu";
+import type { MenuLink } from "../types";
 
 const props = defineProps({
   modelValue: {
@@ -92,6 +85,8 @@ const emit = defineEmits(["update:modelValue"]);
 const route = useRoute();
 const internalCollapsed = ref(props.modelValue);
 const isMobile = ref(false);
+
+const { menuLinks, fetchMenu } = useMenu();
 
 const isCollapsed = computed({
   get: () => internalCollapsed.value,
@@ -110,9 +105,10 @@ const handleResize = () => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
   handleResize();
   window.addEventListener("resize", handleResize);
+  await fetchMenu();
 });
 
 onBeforeUnmount(() => {
@@ -130,7 +126,7 @@ const onNavClick = () => {
 };
 
 const sortedLinks = computed(() =>
-  (menuLinks as MenuLink[])
+  [...menuLinks.value]
     .filter((l) => l.enabled)
     .sort((a, b) => a.ordinal - b.ordinal)
 );
@@ -157,7 +153,7 @@ const getIconSrc = (iconKey: string): string | undefined => {
 .sidebar-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.35);
+  background: var(--overlay-backdrop);
   z-index: 59;
 }
 
@@ -166,8 +162,8 @@ const getIconSrc = (iconKey: string): string | undefined => {
   flex-direction: column;
   width: 100%;
   max-width: 260px;
-  background: #ffffff;
-  border-right: 1px solid #d6e0f0;
+  background: var(--white);
+  border-right: 1px solid var(--border-light);
   transition: max-width 0.2s ease;
 }
 
@@ -180,8 +176,8 @@ const getIconSrc = (iconKey: string): string | undefined => {
   align-items: center;
   justify-content: space-between;
   padding: 16px 0 18px 16px;
-  background: #001738;
-  color: #ffffff;
+  background: var(--header-bg-dark);
+  color: var(--white);
 }
 
 .sidebar-header-left {
@@ -193,8 +189,8 @@ const getIconSrc = (iconKey: string): string | undefined => {
 .sidebar-logo-circle {
   width: 54px;
   height: 54px;
-  border-radius: 999px;
-  background: #ff7d56;
+  border-radius: var(--radius-full);
+  background: var(--brand-orange);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -221,10 +217,10 @@ const getIconSrc = (iconKey: string): string | undefined => {
   position: relative;
   width: 36px;
   height: 60px;
-  border-radius: 8px;
-  border: 1px solid rgba(235, 240, 255, 0.4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-btn-transparent);
   background: transparent;
-  color: #ffffff;
+  color: var(--white);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -240,7 +236,7 @@ const getIconSrc = (iconKey: string): string | undefined => {
 
 .sidebar-body {
   flex: 1;
-  background: #ffffff;
+  background: var(--white);
   display: flex;
   flex-direction: column;
 }
@@ -262,13 +258,13 @@ const getIconSrc = (iconKey: string): string | undefined => {
 .company-name {
   font-size: 20px;
   font-weight: 700;
-  color: #536d82;
+  color: var(--text-secondary);
   margin-bottom: 4px;
 }
 
 .company-subtitle {
   font-size: 15px;
-  color: #001738;
+  color: var(--header-bg-dark);
 }
 
 .company-actions {
@@ -282,7 +278,7 @@ const getIconSrc = (iconKey: string): string | undefined => {
   width: 32px;
   height: 32px;
   border: unset;
-  background: #ffffff;
+  background: var(--white);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -296,13 +292,13 @@ const getIconSrc = (iconKey: string): string | undefined => {
   width: 8px;
   height: 8px;
   border-radius: 3px;
-  background: #ffb020;
-  border: 2px solid #ffffff;
+  background: var(--badge-warning);
+  border: 2px solid var(--white);
 }
 
 .company-divider {
   margin: 18px 0 10px;
-  border-top: 1px solid #dde6f5;
+  border-top: 1px solid var(--border-divider);
 }
 
 .sidebar-menu {
@@ -322,7 +318,7 @@ const getIconSrc = (iconKey: string): string | undefined => {
   gap: 12px;
   padding: 10px 12px;
   border-radius: 10px;
-  color: #143a6a;
+  color: var(--link-sidebar);
   text-decoration: none;
   font-size: 15px;
   font-weight: 500;
@@ -332,13 +328,13 @@ const getIconSrc = (iconKey: string): string | undefined => {
 }
 
 .sidebar-link:hover {
-  background: #f5f7fb;
+  background: var(--link-hover-bg);
 }
 
 .sidebar-link--active {
-  background: #ffe3d7;
-  border-color: #001738;
-  box-shadow: 0 0 0 1px rgba(255, 200, 172, 0.5);
+  background: var(--link-active-bg);
+  border-color: var(--header-bg-dark);
+  box-shadow: var(--shadow-active);
 }
 
 .sidebar-icon-wrap {
@@ -367,8 +363,8 @@ const getIconSrc = (iconKey: string): string | undefined => {
   padding: 14px 12px 18px;
   text-align: center;
   font-size: 13px;
-  color: #7a8ba3;
-  background: #f2f5fb;
+  color: var(--text-footer);
+  background: var(--footer-bg);
 }
 
 .sidebar--collapsed .sidebar-header-text {
@@ -428,7 +424,7 @@ const getIconSrc = (iconKey: string): string | undefined => {
   .sidebar {
     max-width: 100%;
     border-right: none;
-    border-bottom: 1px solid #d6e0f0;
+    border-bottom: 1px solid var(--border-light);
   }
 
   .sidebar--mobile-open {
@@ -449,7 +445,7 @@ const getIconSrc = (iconKey: string): string | undefined => {
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    border: 1px solid rgba(235, 240, 255, 0.6);
+    border: 1px solid var(--border-btn-mobile);
     margin-right: 0;
   }
 
@@ -466,7 +462,7 @@ const getIconSrc = (iconKey: string): string | undefined => {
     width: 18px;
     height: 2px;
     border-radius: 2px;
-    background: #ffffff;
+    background: var(--white);
     transform: translate(-50%, -50%);
     transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
   }
@@ -476,7 +472,7 @@ const getIconSrc = (iconKey: string): string | undefined => {
   }
 
   .sidebar.sidebar--collapsed .sidebar-collapse-btn::before {
-    box-shadow: 0 -5px 0 #ffffff, 0 5px 0 #ffffff;
+    box-shadow: 0 -5px 0 var(--white), 0 5px 0 var(--white);
   }
 
   .sidebar.sidebar--collapsed .sidebar-collapse-btn::after {

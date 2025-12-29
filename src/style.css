@@ -1,31 +1,71 @@
 :root {
-  --font-family-base: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  /* Typography */
+  --font-family-base: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
+  /* Surface Colors */
+  --white: #ffffff;
   --app-bg: #f5f7fb;
-  --sidebar-bg: #071b3a;
-  --sidebar-border: #050f24;
+  --header-bg-dark: #001738;
+  --footer-bg: #f2f5fb;
+  --card-bg: #ffffff;
+  --modal-bg: #ffffff;
+  --tooltip-bg: #111827;
 
+  /* Text Colors */
   --text-primary: #101827;
+  --text-primary-dark: #021b3f;
+  --text-secondary: #536d82;
   --text-muted: #6b7280;
+  --text-footer: #7a8ba3;
   --text-on-dark: #ffffff;
+  --text-tab-inactive: #d0dcff;
 
-  --accent: #ff7d56;
+  /* Brand & Accents */
+  --brand-orange: #ff7d56;
+  --brand-orange-vivid: #FF5F1F;
+  --badge-warning: #ffb020;
   --accent-soft: #ffe3cf;
+  --link-accent: #CC4C19;
+  --link-sidebar: #143a6a;
 
-  --table-border: #e1e6f3;
-  --table-header-bg: #f5f7fb;
+  /* Interactive States */
+  --link-active-bg: #ffe3d7;
+  --link-hover-bg: #f5f7fb;
+  --btn-retry-bg: #111827;
+  --brand-blue: #2563eb;
+  --shadow-active: 0 0 0 1px rgba(255, 200, 172, 0.5);
 
+  /* Borders */
+  --border-light: #d6e0f0;
+  --border-divider: #dde6f5;
+  --border-table: #e1e6f3;
+  --border-orange-soft: #FFDFD2;
+  --border-modal: #e1e6f3;
+  --border-btn-transparent: rgba(235, 240, 255, 0.4);
+  --border-btn-mobile: rgba(235, 240, 255, 0.6);
+
+  /* Data Table Colors */
   --pill-gross-bg: #eef3ff;
-  --pill-gross-text: #071b3a;
-
+  --pill-gross-text: #001738;
   --pill-net-bg: #e5f8ea;
   --pill-net-text: #146c2e;
 
+  /* Status Colors */
+  --error-red: #dc2626;
+  --loader-track: #f3f3f3;
+
+  /* Backdrops & Shadows */
+  --overlay-backdrop: rgba(15, 23, 42, 0.35);
+  --shadow-soft: 0 15px 40px rgba(7, 27, 58, 0.08);
+  --shadow-shell: 0 18px 40px rgba(7, 27, 58, 0.12);
+  --shadow-btn: 0 6px 14px rgba(7, 27, 58, 0.25);
+  --shadow-btn-hover: 0 10px 22px rgba(7, 27, 58, 0.28);
+  --shadow-modal: 0 24px 60px rgba(7, 27, 58, 0.35);
+
+  /* Spacing & Radius */
   --radius-lg: 12px;
   --radius-md: 8px;
-
-  --shadow-soft: 0 15px 40px rgba(7, 27, 58, 0.08);
+  --radius-full: 999px;
 }
 
 *,
